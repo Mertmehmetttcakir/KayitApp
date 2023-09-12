@@ -1,0 +1,219 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.Set;
+
+
+public class CustomerDetailsFrame extends JFrame {
+    private JTable detailsTable;
+    private DefaultTableModel detailsModel;
+    private String filePath = "musteri_bilgileri.txt";// Dosya yolu
+    private int selectedRow;
+    public CustomerDetailsFrame(String customerName, DefaultTableModel model) {
+        setTitle("Müşteri Detayları");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+
+        String[] columnNames = {"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı", "Ödenen Ücret", "Kalan ücret"};
+        detailsModel = new DefaultTableModel(columnNames, 0);
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String currentCustomerName = (String) model.getValueAt(i, 1);
+            if (currentCustomerName.equals(customerName)) {
+                Object[] rowData = new Object[columnNames.length];
+                for (int j = 0; j < columnNames.length; j++) {
+                    rowData[j] = model.getValueAt(i, j);
+                }
+
+                int debt = Integer.parseInt(rowData[5].toString());
+                String paidStr = rowData[6] != null ? rowData[6].toString() : "0";
+                int paid = paidStr.equals("null") ? 0 : Integer.parseInt(paidStr);
+                rowData[7] = debt - paid;
+                detailsModel.addRow(rowData);
+            }
+        }
+
+
+        detailsTable = new JTable(detailsModel);
+        detailsTable.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        JScrollPane scrollPane = new JScrollPane(detailsTable);
+
+        JButton payDebtButton = new JButton("Borç Öde");
+
+        payDebtButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = detailsTable.getSelectedRow();
+
+                if (selectedRow != -1) {
+                    String debtStr = detailsModel.getValueAt(selectedRow, 5).toString();
+                    int debt = Integer.parseInt(debtStr);
+
+                    Object valueAt6 = detailsModel.getValueAt(selectedRow, 6);
+                    String paidStr = (valueAt6 != null) ? valueAt6.toString() : "0";
+                    int paid = paidStr.equals("null") ? 0 : Integer.parseInt(paidStr);
+
+                    String paymentAmountStr = JOptionPane.showInputDialog("Ödeme Miktarını Girin:");
+                    if (paymentAmountStr != null && !paymentAmountStr.isEmpty()) {
+                        try {
+                            int paymentAmount = Integer.parseInt(paymentAmountStr);
+
+                            if (paymentAmount <= debt) {
+                                paid += paymentAmount;
+                                detailsModel.setValueAt(paid, selectedRow, 6);
+                                detailsModel.setValueAt(debt - paid, selectedRow, 7);
+
+
+                                // Yalnızca değiştirilen satırı güncelle
+                                saveUpdatedRows(selectedRow, detailsModel);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Ödeme miktarı borçtan fazla olamaz.", "Hata", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "Geçersiz ödeme miktarı.", "Hata", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Lütfen bir satır seçin.", "Hata", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Pencere kapatıldığında güncellemeleri kaydet
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                saveChangesToFile(filePath, detailsModel, selectedRow);
+            }
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(payDebtButton);
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    public DefaultTableModel getDetailsModel() {
+        return detailsModel;
+    }
+
+    private void saveChangesToFile(String filePath, DefaultTableModel detailsModel, int selectedRow) {
+        try {
+            List<String> updatedLines = new ArrayList<>();
+
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                updatedLines.add(line);
+            }
+            reader.close();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+
+            for (int row = 0; row < detailsModel.getRowCount(); row++) {
+                StringBuilder rowText = new StringBuilder();
+                for (int column = 0; column < detailsModel.getColumnCount(); column++) {
+                    rowText.append(detailsModel.getValueAt(row, column)).append(",");
+                }
+                String newRow = rowText.toString();
+
+                boolean rowUpdated = false;
+                if (row == selectedRow) {
+                    for (int i = 0; i < updatedLines.size(); i++) {
+                        String existingLine = updatedLines.get(i);
+                        if (existingLine.startsWith(newRow.substring(0, newRow.length() - 1))) {
+                            updatedLines.set(i, newRow);
+                            rowUpdated = true;
+                            break;
+                        }
+                    }
+                    if (!rowUpdated) {
+                        updatedLines.add(newRow);
+                    }
+                } else {
+                    for (String existingLine : updatedLines) {
+                        if (!existingLine.startsWith(newRow)) {
+                            writer.write(existingLine);
+                            writer.newLine();
+                        }
+                    }
+                }
+            }
+
+            for (String updatedLine : updatedLines) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch (IOException e) {
+
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Dosya kaydedilirken bir hata oluştu.", "Hata", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void saveUpdatedRows(int rowIndex, DefaultTableModel detailsModel) {
+        try {
+            List<String> updatedLines = new ArrayList<>();
+
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                updatedLines.add(line);
+            }
+            reader.close();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+
+            for (int row = 0; row < detailsModel.getRowCount(); row++) {
+                StringBuilder rowText = new StringBuilder();
+                for (int column = 0; column < detailsModel.getColumnCount(); column++) {
+                    rowText.append(detailsModel.getValueAt(row, column)).append(",");
+                }
+                String newRow = rowText.toString();
+
+                // Remove the line containing the updated data
+                updatedLines.removeIf(existingLine -> existingLine.equals(newRow));
+
+                updatedLines.add(newRow);  // Add the updated row
+            }
+
+            for (String updatedLine : updatedLines) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+
+            writer.close();
+        }catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Dosya güncellenirken bir hata oluştu.", "Hata", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+private int calculateTotalRemainingDebt(DefaultTableModel detailsModel) {
+        int totalRemainingDebt = 0;
+        for (int i = 0; i < detailsModel.getRowCount(); i++) {
+            Object valueAt7 = detailsModel.getValueAt(i, 7);
+            if (valueAt7 != null) {
+                int remainingDebt = Integer.parseInt(valueAt7.toString());
+                totalRemainingDebt += remainingDebt;
+            }
+        }
+        return totalRemainingDebt;
+    }
+}
