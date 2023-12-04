@@ -1,0 +1,38 @@
+      payDebtButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = detailsTable.getSelectedRow();
+
+                if (selectedRow != -1) {
+                    String debtStr = detailsModel.getValueAt(selectedRow, 5).toString();
+                    int debt = Integer.parseInt(debtStr);
+
+                    Object valueAt6 = detailsModel.getValueAt(selectedRow, 6);
+                    String paidStr = (valueAt6 != null) ? valueAt6.toString() : "0";
+                    int paid = paidStr.equals("null") ? 0 : Integer.parseInt(paidStr);
+
+                    String paymentAmountStr = JOptionPane.showInputDialog("Ödeme Miktarını Girin:");
+                    if (paymentAmountStr != null && !paymentAmountStr.isEmpty()) {
+                        try {
+                            int paymentAmount = Integer.parseInt(paymentAmountStr);
+
+                            if (paymentAmount <= debt) {
+                                paid += paymentAmount;
+                                detailsModel.setValueAt(paid, selectedRow, 6);
+                                detailsModel.setValueAt(debt - paid, selectedRow, 7);
+
+
+                                // Yalnızca değiştirilen satırı güncelle
+                                saveUpdatedRows(selectedRow, detailsModel);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Ödeme miktarı borçtan fazla olamaz.", "Hata", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "Geçersiz ödeme miktarı.", "Hata", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Lütfen bir satır seçin.", "Hata", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });

@@ -1,5 +1,4 @@
-05/12/2023,recar,-,-,-,5450,5000,450
-11/11/1111,mert,--,--,--,3450,null,null
-23/11/2023,mert,--,---,--,4560,null,null
-24/12/2023,erkan,-,-,-,6550,null,null
-05/12/2023,recar,-,-,-,5450,5450,0,
+01/10/2023,erkan,5362380769,ford ranger,enj degısım,3500,3500,0,2
+23/09/2023,mert,5308797388,*,enjektor temizlik+ 2 valf,7500,7000,500,3
+21/09/2023,mert,5308797388,seat leon,arıza tespit,500,0,null,4
+18/10/2023,ahmet,-,-,arıza tespıt,300,300,0,5

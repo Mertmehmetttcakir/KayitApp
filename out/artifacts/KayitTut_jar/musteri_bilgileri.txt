@@ -1,0 +1,4 @@
+12.11.2023,erkan,5308797388,getz,enj temızlık,2500,2500,0,1
+*,erkan,*,*,*,4000,4000,0,2
+17/11/2023,mert,-,ranger,2 tane enjektor degisti 2 valf degisti genel enj temizligi yapildi.,8500,8500,0,3
+11/12/2023,al',=,-,-,760,700,60,4

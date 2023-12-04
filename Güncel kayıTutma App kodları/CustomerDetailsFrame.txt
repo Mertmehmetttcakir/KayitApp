@@ -1,0 +1,113 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class CustomerDetailsFrame extends JFrame {
+    private JTable detailsTable;
+
+    public CustomerDetailsFrame(String customerName, DefaultTableModel model) {
+        setTitle("Müşteri Detayları");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+
+        String[] columnNames = {"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı", "Ödenen Ücret","Kalan ücret"};
+        DefaultTableModel detailsModel = new DefaultTableModel(columnNames, 0);
+
+        int totalAmount = 0;
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String currentCustomerName = (String) model.getValueAt(i, 1);
+            if (currentCustomerName.equals(customerName)) {
+                Object[] rowData = new Object[columnNames.length];
+                for (int j = 0; j < columnNames.length; j++) {
+                    rowData[j] = model.getValueAt(i, j);
+                }
+
+                int debt = Integer.parseInt(rowData[5].toString()); // Ücret Tutarı
+                String paidStr = rowData[6] != null ? rowData[6].toString() : "0"; // Burada null ise "0" olarak varsayılan bir değer kullanıyoruz.
+                int paid = paidStr.equals("null") ? 0 : Integer.parseInt(paidStr);
+                rowData[7] = debt - paid; // Kalan Ücret
+                detailsModel.addRow(rowData);
+            }
+        }
+
+        detailsTable = new JTable(detailsModel);
+        detailsTable.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        JScrollPane scrollPane = new JScrollPane(detailsTable);
+
+        JLabel totalAmountLabel = new JLabel("Toplam Ücret: " + totalAmount);
+        totalAmountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+        JButton payDebtButton = new JButton("Borç Öde");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(totalAmountLabel);
+        buttonPanel.add(payDebtButton);
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        int finalTotalAmount = totalAmount;
+        payDebtButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = detailsTable.getSelectedRow();
+
+                if (selectedRow != -1) {
+                    String debtStr = detailsModel.getValueAt(selectedRow, 5).toString();
+                    int debt = Integer.parseInt(debtStr);
+
+                    Object valueAt6 = detailsModel.getValueAt(selectedRow, 6);
+                    String paidStr = (valueAt6 != null) ? valueAt6.toString() : "0";
+                    int paid = paidStr.equals("null") ? 0 : Integer.parseInt(paidStr);
+
+                    // Borç ödeme işlemi yapılacak
+                    String paymentAmountStr = JOptionPane.showInputDialog("Ödeme Miktarını Girin:");
+                    if (paymentAmountStr != null && !paymentAmountStr.isEmpty()) {
+                        try {
+                            int paymentAmount = Integer.parseInt(paymentAmountStr);
+
+                            if (paymentAmount <= debt) {
+                                // Ödenen borcu güncelle
+                                paid += paymentAmount;
+                                detailsModel.setValueAt(paid, selectedRow, 6);
+                                detailsModel.fireTableDataChanged();
+
+                                // Kalan borcu güncelle
+                                detailsModel.setValueAt(debt - paid, selectedRow, 7);
+                                detailsModel.fireTableDataChanged();
+
+                                // Toplam ödenen miktarı hesapla ve göster
+                                int totalPaidAmount =  calculateTotalRemainingDebt(detailsModel);
+                                totalAmountLabel.setText("Toplam Kalan Miktar: " + totalPaidAmount);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Ödeme miktarı borçtan fazla olamaz.", "Hata", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "Geçersiz ödeme miktarı.", "Hata", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Lütfen bir satır seçin.", "Hata", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private int calculateTotalRemainingDebt(DefaultTableModel detailsModel) {
+        int totalRemainingDebt = 0;
+        for (int i = 0; i < detailsModel.getRowCount(); i++) {
+            Object valueAt7 = detailsModel.getValueAt(i, 7);
+            if (valueAt7 != null) {
+                int remainingDebt = Integer.parseInt(valueAt7.toString());
+                totalRemainingDebt += remainingDebt;
+            }
+        }
+        return totalRemainingDebt;
+    }
+}

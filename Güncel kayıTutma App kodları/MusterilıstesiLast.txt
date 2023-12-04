@@ -12,11 +12,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.RowFilter;
 import java.util.HashSet;
 import java.io.PrintWriter;
-import java.util.Random;
-
 
 public class MusteriListesi extends JFrame {
-
     private JTable table;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField searchField;
@@ -36,14 +33,9 @@ public class MusteriListesi extends JFrame {
         searchPanel.add(searchField);
 
         model = new DefaultTableModel(
-                new String[]{"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı", "Ödenen tutar", "Kalan ücret","index"},
+                new String[]{"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı","Ödenen tutar","Kalan ücret"},
                 0
-
         );
-        // Ödenen tutar sütununu dolaşarak tüm değerleri 0 olarak ayarla
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt("0", i, 6); // "Ödenen tutar" sütunu (6. sütun)
-        }
 
         table = new JTable(model);
         table.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -81,13 +73,6 @@ public class MusteriListesi extends JFrame {
 
         loadCustomers();
         updateCustomerComboBox();
-        // Index sütununu doldurma
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(i + 1, i, 8);
-            if (model.getValueAt(i, 6) == null || model.getValueAt(i, 6).toString().equals("null")) {
-                model.setValueAt("0", i, 6);
-            }
-        }
 
         musteriComboBox.addActionListener(new ActionListener() {
             @Override
@@ -112,14 +97,10 @@ public class MusteriListesi extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String selectedCustomer = (String) musteriComboBox.getSelectedItem();
                 if (selectedCustomer != null) {
-                    int selectedRow = table.getSelectedRow();
-                    if (selectedRow != -1) {
-                        showCustomerDetails(selectedCustomer, selectedRow);
-                    }
+                    showCustomerDetails(selectedCustomer);
                 }
             }
         });
-
 
         JButton deleteRecordButton = new JButton("Kayıt Sil");
         searchPanel.add(deleteRecordButton);
@@ -140,6 +121,7 @@ public class MusteriListesi extends JFrame {
             }
         });
 
+
         JButton calculateTotalButton = new JButton("Toplam Ücreti Hesapla");
         searchPanel.add(calculateTotalButton);
         calculateTotalButton.addActionListener(new ActionListener() {
@@ -148,20 +130,9 @@ public class MusteriListesi extends JFrame {
                 calculateTotalAmount();
             }
         });
-        customizeTableColors();
     }
 
-    private void customizeTableColors() {
-        Random rand = new Random();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            int r = rand.nextInt(256);
-            int g = rand.nextInt(256);
-            int b = rand.nextInt(256);
-            Color randomColor = new Color(r, g, b);
-            table.setSelectionBackground(randomColor);
-            table.setSelectionForeground(Color.WHITE);
-        }
-    }
+
     private void search(String query) {
         if (query.trim().isEmpty()) {
             sorter.setRowFilter(null);
@@ -195,22 +166,11 @@ public class MusteriListesi extends JFrame {
             musteriComboBox.addItem(customerName);
         }
     }
-    /*
-    private void updateModelFromDetails(DefaultTableModel detailsModel) {
-        for (int row = 0; row < detailsModel.getRowCount(); row++) {
-            Object[] rowData = new Object[model.getColumnCount()];
-            for (int column = 0; column < detailsModel.getColumnCount(); column++) {
-                rowData[column] = detailsModel.getValueAt(row, column);
-            }
-            model.addRow(rowData);
-        }
-        updateCustomerComboBox();
+
+    private void showCustomerDetails(String customerName) {
+        new CustomerDetailsFrame(customerName, model);
     }
 
-     */
-    private void showCustomerDetails(String customerName, int selectedRow) {
-        new CustomerDetailsFrame(customerName, model, selectedRow);
-    }
     private void saveUpdatedCustomerList() {
         try {
             PrintWriter writer = new PrintWriter("musteri_bilgileri.txt");

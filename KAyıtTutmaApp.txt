@@ -1,0 +1,13 @@
+KayıtTutmaAppte yapılacaklar:
+
+
+musteri listesinde müşterinin adlarının olduğu bir combobox olsun(Düzenli müşteriler,listesi tutulanlar)+++
+oradan seçilen müşteriye tıkladığımızda o müşteriye yapılan işleri ve toplam ücretleri göstersin 
+toplam ücretleri gösterdiği kısımda ödenen borç butonu koy ve girilen tutarı müşterinin toplam borcundan düş.
+Kayıtlı müşterilerin yapılan iş tarihleri yeniden eskiye doğru sıralasın
+detayları gör kısmında iş ekle kısmı olsun tabloya otomatik müşteri adı girilsin + olarak diğer sorular sorulsun ve kayıt güncellensin.
+
+detayları gör kısmına ücret total kısmı ekle. 
+detayları gör kısmına borç ödeme kısmı ekle. girilen tutar toplam borçtan düşsün ve total ücret kısmını güncellesin.
+
+müşteri listesi kısmında tüm ücretleri toplasın/ aylık total ciro hesabı.

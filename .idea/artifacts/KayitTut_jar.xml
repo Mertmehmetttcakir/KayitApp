@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="KayitTut:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/KayitTut_jar</output-path>
+    <root id="archive" name="KayitApp.jar">
+      <element id="module-output" name="KayitApp" />
+    </root>
+  </artifact>
+</component>

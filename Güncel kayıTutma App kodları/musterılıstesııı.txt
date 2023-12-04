@@ -12,8 +12,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.RowFilter;
 import java.util.HashSet;
 import java.io.PrintWriter;
-import java.util.Random;
-
 
 public class MusteriListesi extends JFrame {
 
@@ -119,7 +117,7 @@ public class MusteriListesi extends JFrame {
                 }
             }
         });
-
+        
 
         JButton deleteRecordButton = new JButton("Kayıt Sil");
         searchPanel.add(deleteRecordButton);
@@ -148,20 +146,10 @@ public class MusteriListesi extends JFrame {
                 calculateTotalAmount();
             }
         });
-        customizeTableColors();
     }
 
-    private void customizeTableColors() {
-        Random rand = new Random();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            int r = rand.nextInt(256);
-            int g = rand.nextInt(256);
-            int b = rand.nextInt(256);
-            Color randomColor = new Color(r, g, b);
-            table.setSelectionBackground(randomColor);
-            table.setSelectionForeground(Color.WHITE);
-        }
-    }
+
+
     private void search(String query) {
         if (query.trim().isEmpty()) {
             sorter.setRowFilter(null);

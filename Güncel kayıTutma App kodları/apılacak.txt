@@ -1,0 +1,2 @@
+istenilen ----> müşteri listesindeki detayları gösterilmeyen müşterilerin silinmemesi 
+ve değişiklik olan müşteri satırının müşteri listesi penceresinde güncellenmesini istiyorum

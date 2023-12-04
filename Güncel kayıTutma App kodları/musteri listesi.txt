@@ -12,17 +12,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.RowFilter;
 import java.util.HashSet;
 import java.io.PrintWriter;
-import java.util.Random;
-
 
 public class MusteriListesi extends JFrame {
-
     private JTable table;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField searchField;
     private JComboBox<String> musteriComboBox;
     private DefaultTableModel model;
-    private JLabel totalAmountLabel;
 
     public MusteriListesi() {
         setTitle("Müşteri Listesi");
@@ -36,14 +32,9 @@ public class MusteriListesi extends JFrame {
         searchPanel.add(searchField);
 
         model = new DefaultTableModel(
-                new String[]{"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı", "Ödenen tutar", "Kalan ücret","index"},
+                new String[]{"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı"},
                 0
-
         );
-        // Ödenen tutar sütununu dolaşarak tüm değerleri 0 olarak ayarla
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt("0", i, 6); // "Ödenen tutar" sütunu (6. sütun)
-        }
 
         table = new JTable(model);
         table.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -76,18 +67,8 @@ public class MusteriListesi extends JFrame {
             }
         });
 
-        totalAmountLabel = new JLabel("Toplam Ücret: ");
-        searchPanel.add(totalAmountLabel);
-
         loadCustomers();
         updateCustomerComboBox();
-        // Index sütununu doldurma
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(i + 1, i, 8);
-            if (model.getValueAt(i, 6) == null || model.getValueAt(i, 6).toString().equals("null")) {
-                model.setValueAt("0", i, 6);
-            }
-        }
 
         musteriComboBox.addActionListener(new ActionListener() {
             @Override
@@ -112,24 +93,24 @@ public class MusteriListesi extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String selectedCustomer = (String) musteriComboBox.getSelectedItem();
                 if (selectedCustomer != null) {
-                    int selectedRow = table.getSelectedRow();
-                    if (selectedRow != -1) {
-                        showCustomerDetails(selectedCustomer, selectedRow);
-                    }
+                    showCustomerDetails(selectedCustomer);
                 }
             }
         });
 
-
         JButton deleteRecordButton = new JButton("Kayıt Sil");
         searchPanel.add(deleteRecordButton);
+
         deleteRecordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    int response = JOptionPane.showConfirmDialog(null, "Seçilen müşteri kaydını silmek istediğinizden emin misiniz?", "Onay", JOptionPane.YES_NO_OPTION);
-                    if (response == JOptionPane.YES_OPTION) {
+                    String customerName = (String) model.getValueAt(selectedRow, 1);
+                    int confirm = JOptionPane.showConfirmDialog(null,
+                            customerName + " isimli müşteriyi silmek istediğinizden emin misiniz?",
+                            "Müşteri Silme Onayı", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
                         model.removeRow(selectedRow);
                         updateCustomerComboBox();
                         saveUpdatedCustomerList();
@@ -139,31 +120,10 @@ public class MusteriListesi extends JFrame {
                 }
             }
         });
-
-        JButton calculateTotalButton = new JButton("Toplam Ücreti Hesapla");
-        searchPanel.add(calculateTotalButton);
-        calculateTotalButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                calculateTotalAmount();
-            }
-        });
-        customizeTableColors();
     }
 
-    private void customizeTableColors() {
-        Random rand = new Random();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            int r = rand.nextInt(256);
-            int g = rand.nextInt(256);
-            int b = rand.nextInt(256);
-            Color randomColor = new Color(r, g, b);
-            table.setSelectionBackground(randomColor);
-            table.setSelectionForeground(Color.WHITE);
-        }
-    }
     private void search(String query) {
-        if (query.trim().isEmpty()) {
+        if (query.trim().length() == 0) {
             sorter.setRowFilter(null);
         } else {
             sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
@@ -185,7 +145,7 @@ public class MusteriListesi extends JFrame {
     }
 
     private void updateCustomerComboBox() {
-        musteriComboBox.removeAllItems();
+        musteriComboBox.removeAllItems(); // Önce tüm öğeleri temizleyelim
         HashSet<String> uniqueCustomerNames = new HashSet<>();
         for (int i = 0; i < model.getRowCount(); i++) {
             String customerName = (String) model.getValueAt(i, 1);
@@ -195,22 +155,36 @@ public class MusteriListesi extends JFrame {
             musteriComboBox.addItem(customerName);
         }
     }
-    /*
-    private void updateModelFromDetails(DefaultTableModel detailsModel) {
-        for (int row = 0; row < detailsModel.getRowCount(); row++) {
-            Object[] rowData = new Object[model.getColumnCount()];
-            for (int column = 0; column < detailsModel.getColumnCount(); column++) {
-                rowData[column] = detailsModel.getValueAt(row, column);
+
+    private void showCustomerDetails(String customerName) {
+        JFrame detailsFrame = new JFrame("Müşteri Detayları");
+        detailsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        detailsFrame.setSize(600, 400);
+        detailsFrame.setLocationRelativeTo(null);
+
+        String[] columnNames = {"Yapılan işin Tarihi", "Müşteri Adı", "Telefon Numarası", "Araç Bilgisi", "Yapılan İş", "Ücret Tutarı"};
+        DefaultTableModel detailsModel = new DefaultTableModel(columnNames, 0);
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String currentCustomerName = (String) model.getValueAt(i, 1);
+            if (currentCustomerName.equals(customerName)) {
+                Object[] rowData = new Object[columnNames.length];
+                for (int j = 0; j < columnNames.length; j++) {
+                    rowData[j] = model.getValueAt(i, j);
+                }
+                detailsModel.addRow(rowData);
             }
-            model.addRow(rowData);
         }
-        updateCustomerComboBox();
+
+        JTable detailsTable = new JTable(detailsModel);
+        detailsTable.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        JScrollPane scrollPane = new JScrollPane(detailsTable);
+        detailsFrame.add(scrollPane);
+
+        detailsFrame.setVisible(true);
     }
 
-     */
-    private void showCustomerDetails(String customerName, int selectedRow) {
-        new CustomerDetailsFrame(customerName, model, selectedRow);
-    }
     private void saveUpdatedCustomerList() {
         try {
             PrintWriter writer = new PrintWriter("musteri_bilgileri.txt");
@@ -225,30 +199,16 @@ public class MusteriListesi extends JFrame {
                 writer.println(line);
             }
             writer.close();
-            JOptionPane.showMessageDialog(null, "Müşteri bilgileri güncellendi.", "Bilgi", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Müşteri bilgileri güncellenirken bir hata oluştu.", "Hata", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void calculateTotalAmount() {
-        int totalAmount = 0;
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String amountStr = (String) model.getValueAt(i, 5);
-            int amount = Integer.parseInt(amountStr);
-            totalAmount += amount;
-        }
-        totalAmountLabel.setText("Toplam Ücret: " + totalAmount);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MusteriListesi musteriListesi = new MusteriListesi();
-                musteriListesi.setVisible(true);
-                musteriListesi.setLocationRelativeTo(null);
+                new MusteriListesi().setVisible(true);
             }
         });
     }

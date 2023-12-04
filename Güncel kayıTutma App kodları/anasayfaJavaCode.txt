@@ -1,0 +1,177 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+
+public class Anasayfa extends JFrame {
+    private JComboBox<String> customerComboBox;
+
+    private ArrayList<String> customerList;
+
+    public Anasayfa() {
+        setTitle("Müşteri Kayıt Uygulaması");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(400, 300);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new FlowLayout());
+
+        JButton addCustomerButton = new JButton("Yeni Müşteri Kaydı Yap");
+        panel.add(addCustomerButton);
+
+        customerComboBox = new JComboBox<>();
+        panel.add(customerComboBox);
+
+        customerList = new ArrayList<>();
+        loadCustomers();
+
+        JButton showCustomerListButton = new JButton("Müşteri Listesi");
+        panel.add(showCustomerListButton);
+
+        showCustomerListButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new MusteriListesi().setVisible(true);
+            }
+        });
+
+
+        addCustomerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[] dateOptions = {"Bugün", "Dün", "Belirli Bir Tarih"};
+                JComboBox<String> dateComboBox = new JComboBox<>(dateOptions);
+
+                JPanel datePanel = new JPanel();
+                datePanel.add(new JLabel("Yapılan İşin Tarihi:"));
+                datePanel.add(dateComboBox);
+
+                int dateChoice = JOptionPane.showOptionDialog(null, datePanel, "Tarih Seçin", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+
+                if (dateChoice == JOptionPane.CLOSED_OPTION) {
+                    return;
+                }
+
+                String selectedDate = "";
+                if (dateChoice == 2) {
+                    selectedDate = JOptionPane.showInputDialog(null, "Tarih (GG.AA.YYYY):");
+                    if (selectedDate == null || selectedDate.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "Geçerli bir tarih girin.", "Hata", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } else if (dateChoice == 0) {
+                    selectedDate = "Bugün";
+                } else if (dateChoice == 1) {
+                    selectedDate = "Dün";
+                }
+
+                String customerName = JOptionPane.showInputDialog(null, "Müşteri Adı:");
+                if (customerName != null && !customerName.isEmpty()) {
+                    String phoneNumber = JOptionPane.showInputDialog(null, "Telefon Numarası:");
+                    if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                        String carInfo = JOptionPane.showInputDialog(null, "Araç Bilgisi:");
+                        String jobDone = JOptionPane.showInputDialog(null, "Yapılan İş:");
+                        String amountStr = JOptionPane.showInputDialog(null, "Ücret Tutarı:");
+                        if (carInfo != null && jobDone != null && amountStr != null &&
+                                !carInfo.isEmpty() && !jobDone.isEmpty() && !amountStr.isEmpty()) {
+                            try {
+                                int amount = Integer.parseInt(amountStr);
+                                String newCustomer = selectedDate + "," + customerName + "," + phoneNumber + "," + carInfo + ","
+                                        + jobDone + "," + amount;
+
+                                String fileName = "musteri_bilgileri.txt";
+                                BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+                                writer.write(newCustomer);
+                                writer.newLine();
+                                writer.close();
+
+                                customerList.add(newCustomer);
+                                updateCustomerComboBox();
+                            } catch (NumberFormatException ex) {
+                                JOptionPane.showMessageDialog(null, "Geçerli bir ücret tutarı girin.", "Hata", JOptionPane.ERROR_MESSAGE);
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Tüm alanları doldurmalısınız.", "Hata", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Telefon numarası girmelisiniz.", "Hata", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Müşteri adı girmelisiniz.", "Hata", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+
+        customerComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedCustomer = (String) customerComboBox.getSelectedItem();
+                if (selectedCustomer != null) {
+                    for (String customerInfo : customerList) {
+                        String[] infoParts = customerInfo.split(",");
+                        if (infoParts[0].equals(selectedCustomer)) {
+                            String info = "Müşteri Adı: " + infoParts[0] +
+                                    "\nTelefon Numarası: " + infoParts[1] +
+                                    "\nAraç Bilgisi: " + infoParts[2] +
+                                    "\nYapılan İş: " + infoParts[3] +
+                                    "\nÜcret Tutarı: " + infoParts[4];
+                            JOptionPane.showMessageDialog(null, info, "Müşteri Bilgileri", JOptionPane.INFORMATION_MESSAGE);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        JButton deleteRecordButton = new JButton("Kayıt Silme");
+        panel.add(deleteRecordButton);
+
+        deleteRecordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new KayitSil().setVisible(true);
+                dispose();
+
+            }
+        });
+
+        add(panel);
+    }
+
+    private void loadCustomers() {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("musteri_bilgileri.txt"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] customerInfo = line.split(",");
+                customerComboBox.addItem(customerInfo[0]);
+                customerList.add(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateCustomerComboBox() {
+        customerComboBox.removeAllItems();
+        for (String customerInfo : customerList) {
+            String[] infoParts = customerInfo.split(",");
+            customerComboBox.addItem(infoParts[0]);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new Anasayfa().setVisible(true);
+            }
+        });
+    }
+}
