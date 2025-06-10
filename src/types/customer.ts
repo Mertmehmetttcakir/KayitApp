@@ -4,8 +4,10 @@ import { Vehicle } from './vehicle';
 
 export interface Customer {
   id: string;
+  user_id?: string | null;
+  created_by_admin_id?: string | null;
   full_name: string;
-  email?: string;
+  email?: string | null;
   phone: string;
   address?: string;
   vehicles?: Vehicle[];
@@ -17,7 +19,7 @@ export interface Customer {
   total_outstanding_balance_from_jobs?: number | null;
 }
 
-export type CustomerCreate = Omit<Customer, 'id' | 'created_at' | 'updated_at' | 'vehicles' | 'appointments' | 'jobs' | 'last_appointment_date' | 'total_outstanding_balance_from_jobs'>;
+export type CustomerCreate = Omit<Customer, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'vehicles' | 'appointments' | 'jobs' | 'last_appointment_date' | 'total_outstanding_balance_from_jobs'>;
 
 export type CustomerUpdate = Partial<CustomerCreate>;
 

@@ -2,9 +2,13 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { ErrorInfo } from 'react';
 import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import { CacheDebugButton } from './components/common/CacheDebugButton';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { MainLayout } from './components/layouts/MainLayout';
 import { AuthProvider } from './context/AuthContext';
+import { CompanySettingsPage } from './pages/admin/CompanySettingsPage';
+import { SystemSettingsPage } from './pages/admin/SystemSettingsPage';
+import { UserManagementPage } from './pages/admin/UserManagementPage';
 import AppointmentCalendar from './pages/appointments/AppointmentCalendar';
 import { AuthCallback } from './pages/auth/AuthCallback';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -15,6 +19,7 @@ import { CustomerDetailsPage } from './pages/customers/CustomerDetailsPage';
 import CustomerList from './pages/customers/CustomerList';
 import { Dashboard } from './pages/Dashboard';
 import { ProfilePage } from './pages/profile/ProfilePage';
+import { ReportsPage } from './pages/reports/ReportsPage';
 import { theme } from './theme';
 
 // React Query client oluştur
@@ -99,46 +104,48 @@ export const App: React.FC = () => {
       <ChakraProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <Router>
-              <RouteDebugger />
-              <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={<LoginPage />} />
+              <Router>
+                <RouteDebugger />
+                <CacheDebugButton />
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/login" element={<LoginPage />} />
                 <Route path="/auth/register" element={<RegisterPage />} />
-                <Route path="/auth/login" element={<LoginPage />} />
-                <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/auth/update-password" element={<UpdatePasswordPage />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                
-                {/* Protected routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<MainLayout />}>
+                  <Route path="/auth/login" element={<LoginPage />} />
+                  <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/auth/update-password" element={<UpdatePasswordPage />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  
+                  {/* Protected routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route element={<MainLayout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/customers" element={<CustomerList />} />
+                      <Route path="/customers" element={<CustomerList />} />
                     <Route path="/customers/:id" element={<CustomerDetailsPage />} />
-                    <Route path="/appointments" element={<AppointmentCalendar />} />
-                    <Route path="/appointments/:id" element={<div>Randevu Detay</div>} />
-                    <Route path="/vehicles" element={<div>Araçlar</div>} />
-                    <Route path="/technicians" element={<div>Teknisyenler</div>} />
-                    <Route path="/services" element={<div>Servis Geçmişi</div>} />
-                    <Route path="/reports" element={<div>Raporlar</div>} />
+                      <Route path="/appointments" element={<AppointmentCalendar />} />
+                      <Route path="/appointments/:id" element={<div>Randevu Detay</div>} />
+                      <Route path="/vehicles" element={<div>Araçlar</div>} />
+                      <Route path="/technicians" element={<div>Teknisyenler</div>} />
+                      <Route path="/services" element={<div>Servis Geçmişi</div>} />
+                      <Route path="/reports" element={<ReportsPage />} />
+                    </Route>
                   </Route>
-                </Route>
-                
-                {/* Admin only routes */}
-                <Route element={<ProtectedRoute requiredPermission="manage_users" />}>
-                  <Route element={<MainLayout />}>
-                    <Route path="/admin/users" element={<div>Kullanıcı Yönetimi</div>} />
-                    <Route path="/admin/settings" element={<div>Sistem Ayarları</div>} />
+                  
+                  {/* Admin only routes */}
+                  <Route element={<ProtectedRoute requiredPermission="manage_users" />}>
+                    <Route element={<MainLayout />}>
+                      <Route path="/admin/users" element={<UserManagementPage />} />
+                      <Route path="/admin/company" element={<CompanySettingsPage />} />
+                      <Route path="/admin/settings" element={<SystemSettingsPage />} />
+                    </Route>
                   </Route>
-                </Route>
-                
-                {/* Default redirects */}
-                <Route path="*" element={<div>Sayfa Bulunamadı</div>} />
-              </Routes>
-            </Router>
+                  
+                  {/* Default redirects */}
+                  <Route path="*" element={<div>Sayfa Bulunamadı</div>} />
+                </Routes>
+              </Router>
           </AuthProvider>
         </QueryClientProvider>
       </ChakraProvider>

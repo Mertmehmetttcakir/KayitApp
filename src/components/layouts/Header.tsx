@@ -14,13 +14,24 @@ import {
 import React from 'react';
 import { FiBell, FiSettings } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useUserRole } from '../../hooks/useUserRole';
 
 export const Header: React.FC = () => {
   const auth = useAuth();
   const user = auth?.user;
   const logout = auth?.logout;
+  const { userProfile, role } = useUserRole();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const getRoleDisplayName = (role?: string) => {
+    switch (role) {
+      case 'admin': return 'Yönetici';
+      case 'technician': return 'Teknisyen';
+      case 'customer': return 'Müşteri';
+      default: return 'Kullanıcı';
+    }
+  };
 
   return (
     <Box
@@ -56,9 +67,16 @@ export const Header: React.FC = () => {
                 <HStack>
                   <Avatar
                     size="sm"
-                    name={user?.name}
+                    name={userProfile?.full_name || user?.name}
                   />
-                  <Text>{user?.name}</Text>
+                  <Box textAlign="left">
+                    <Text fontSize="sm" fontWeight="medium">
+                      {userProfile?.full_name || user?.name}
+                    </Text>
+                    <Text fontSize="xs" color="gray.500">
+                      {getRoleDisplayName(role)}
+                    </Text>
+                  </Box>
                 </HStack>
               </MenuButton>
               <MenuList>

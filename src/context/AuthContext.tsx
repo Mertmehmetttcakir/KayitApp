@@ -1,8 +1,9 @@
+import { Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-// import { authService } from '../services/authService'; // authService kaldırıldı
-import { Session } from '@supabase/supabase-js'; // Supabase tipleri import edildi
-import { supabase } from '../lib/supabase'; // Supabase client import edildi
-import { User as AppUser, LoginRequest } from '../types/auth'; // AppUser tipi korunuyor
+import { supabase } from '../lib/supabase';
+import { User as AppUser, LoginRequest } from '../types/auth';
+import { clearCacheOnUserChange } from '../utils/cacheUtils';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Başlangıçta true
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setIsLoading(true);
@@ -34,8 +36,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
+        const previousUserId = user?.id;
+        const newUserId = newSession?.user?.id;
+        
         setSession(newSession);
         setUser(newSession?.user ? (newSession.user as unknown as AppUser) : null);
+        
+        // Kullanıcı değiştiğinde cache'i temizle
+        if (previousUserId !== newUserId) {
+          clearCacheOnUserChange(queryClient);
+        }
       }
     );
 
@@ -68,6 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setError(null);
     try {
+      // Çıkış yapmadan önce cache'i temizle
+      clearCacheOnUserChange(queryClient);
+      
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) {
         throw signOutError;

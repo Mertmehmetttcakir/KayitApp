@@ -4,14 +4,22 @@ import { BaseApiService } from './baseApiService';
 
 export class AppointmentService extends BaseApiService {
   static async getAppointments(): Promise<Appointment[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     return this.handleListRequest<Appointment>(
       async () => supabase
         .from('appointments')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin randevularını getir
         .order('appointment_date', { ascending: true }),
       'Randevular getirilemedi'
     );
@@ -107,15 +115,23 @@ export class AppointmentService extends BaseApiService {
   }
 
   static async getUpcomingAppointments(): Promise<Appointment[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const now = new Date().toISOString();
     return this.handleListRequest<Appointment>(
       async () => supabase
         .from('appointments')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin randevularını getir
         .gte('appointment_date', now)
         .order('appointment_date', { ascending: true }),
       'Yaklaşan randevular getirilemedi'
@@ -123,15 +139,23 @@ export class AppointmentService extends BaseApiService {
   }
 
   static async getPastAppointments(): Promise<Appointment[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const now = new Date().toISOString();
     return this.handleListRequest<Appointment>(
       async () => supabase
         .from('appointments')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin randevularını getir
         .lt('appointment_date', now)
         .order('appointment_date', { ascending: false }),
       'Geçmiş randevular getirilemedi'

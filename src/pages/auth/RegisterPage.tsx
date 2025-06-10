@@ -48,26 +48,68 @@ export const RegisterPage: React.FC = () => {
     setError(null);
 
     try {
+      console.log('Kayıt işlemi başlatılıyor...', formData);
+
       // 1. Supabase Auth ile kullanıcı oluştur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        options: { // options objesi içinde data
+        options: {
           data: {
             full_name: formData.fullName,
             phone: formData.phone,
+            role: 'customer',
           }
         }
       });
 
-      if (authError) throw authError;
+      console.log('Auth sonucu:', { authData, authError });
+
+      if (authError) {
+        console.error('Auth hatası:', authError);
+        throw authError;
+      }
 
       if (authData.user) {
-        // Trigger user_profiles tablosunu halledecek.
-        // 3. Başarılı kayıt sonrası bilgilendirme ve yönlendirme
+        console.log('Kullanıcı oluşturuldu, profil kontrol ediliyor...');
+
+        // 2. Kısa bir bekleme süresi (trigger'ın çalışması için)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 3. Profil oluşturulmuş mu kontrol et
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (!existingProfile) {
+          console.log('Profil bulunamadı, manuel olarak oluşturuluyor...');
+          
+          // 4. Manuel profil oluştur
+          const profileData = {
+            id: authData.user.id,
+            full_name: formData.fullName,
+            phone: formData.phone,
+            role: 'customer'
+          };
+
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert(profileData);
+
+          if (profileError) {
+            console.error('Profil oluşturma hatası:', profileError);
+            throw new Error(`Profil oluşturulamadı: ${profileError.message}`);
+          }
+        } else {
+          console.log('Profil başarıyla oluşturuldu:', existingProfile);
+        }
+
+        // 5. Başarılı kayıt sonrası bilgilendirme ve yönlendirme
         toast({
           title: 'Kayıt Başarılı',
-          description: 'Lütfen e-posta adresinizi doğrulayın.',
+          description: 'Hesabınız oluşturuldu. Giriş yapabilirsiniz.',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -76,6 +118,7 @@ export const RegisterPage: React.FC = () => {
         navigate('/auth/login');
       }
     } catch (error) {
+      console.error('Kayıt hatası:', error);
       const errorMessage = error instanceof Error ? error.message : 'Kayıt olurken bir hata oluştu';
       setError(errorMessage);
       toast({

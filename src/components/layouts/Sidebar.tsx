@@ -1,19 +1,23 @@
 import {
     Box,
+    Divider,
     Icon,
     Link,
     Text,
     useColorModeValue,
-    VStack,
+    VStack
 } from '@chakra-ui/react';
 import React from 'react';
 import {
     FiBarChart2,
     FiClipboard,
+    FiHome,
+    FiSettings,
     FiTool,
     FiUsers
 } from 'react-icons/fi';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useUserRole } from '../../hooks/useUserRole';
 
 interface NavItemProps {
   icon: any;
@@ -63,6 +67,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon, children, to }) => {
 export const Sidebar: React.FC = () => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const { isAdmin, canManageCustomers } = useUserRole();
 
   return (
     <Box
@@ -80,9 +85,13 @@ export const Sidebar: React.FC = () => {
         <NavItem icon={FiBarChart2} to="/dashboard">
           Ciro Paneli
         </NavItem>
+        
+        {canManageCustomers && (
         <NavItem icon={FiUsers} to="/customers">
           Müşteriler
         </NavItem>
+        )}
+        
         <NavItem icon={FiTool} to="/technicians">
           Teknisyenler
         </NavItem>
@@ -92,6 +101,24 @@ export const Sidebar: React.FC = () => {
         <NavItem icon={FiBarChart2} to="/reports">
           Raporlar
         </NavItem>
+        
+        {isAdmin && (
+          <>
+            <Divider my={2} />
+            <Text px={4} py={2} fontSize="sm" fontWeight="bold" color="gray.500">
+              YÖNETİM
+            </Text>
+            <NavItem icon={FiUsers} to="/admin/users">
+              Kullanıcı Yönetimi
+            </NavItem>
+            <NavItem icon={FiHome} to="/admin/company">
+              Şirket Bilgileri
+            </NavItem>
+            <NavItem icon={FiSettings} to="/admin/settings">
+              Sistem Ayarları
+            </NavItem>
+          </>
+        )}
       </VStack>
     </Box>
   );

@@ -15,6 +15,7 @@ import {
     Table,
     Tbody,
     Td,
+    Text,
     Th,
     Thead,
     Tr,
@@ -23,6 +24,7 @@ import {
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCustomers } from '../../../hooks/useCustomers';
+import { useUserRole } from '../../../hooks/useUserRole';
 import { Customer, CustomerFormData, CustomerFilters as ICustomerFilters } from '../../../types/customer';
 import { CustomerFilters } from './CustomerFilters';
 import { CustomerForm } from './CustomerForm';
@@ -41,6 +43,8 @@ export const CustomerList: React.FC = () => {
     onClose: onDeleteDialogClose
   } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  
+  const { canManageCustomers, isLoading: roleLoading } = useUserRole();
   
   const {
     customers,
@@ -89,11 +93,20 @@ export const CustomerList: React.FC = () => {
     onClose();
   };
 
-  if (isLoading) {
+  if (isLoading || roleLoading) {
     return (
       <Flex justify="center" align="center" h="200px">
         <Spinner size="xl" color="blue.500" />
       </Flex>
+    );
+  }
+
+  if (!canManageCustomers) {
+    return (
+      <Box p={4}>
+        <Heading size="lg" color="red.500">Erişim Reddedildi</Heading>
+        <Text mt={2}>Bu sayfayı görüntülemek için yeterli yetkiniz bulunmamaktadır.</Text>
+      </Box>
     );
   }
 

@@ -29,6 +29,8 @@ export const useTotalRevenue = (
   >({
     queryKey: queryKey as any, // TypeScript'in burada biraz yardıma ihtiyacı olabilir
     queryFn: () => DashboardService.getTotalRevenue(params),
+    staleTime: 0, // Cache'i hemen stale yap
+    refetchOnMount: true, // Mount olduğunda yeniden fetch et
     ...options,
   });
 }; 

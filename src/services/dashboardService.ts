@@ -8,7 +8,15 @@ export class DashboardService extends BaseApiService {
   static async getTotalRevenue(params?: RevenueFilterParams): Promise<TotalRevenue> {
     const errorMessage = 'Toplam ciro getirilemedi';
     try {
-      let query = supabase.from('paid_jobs_revenue').select('paid_amount');
+      // Mevcut kullanıcının ID'sini al
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+      }
+
+      let query = supabase.from('paid_jobs_revenue').select('paid_amount')
+        .eq('customer_user_id', user.id); // Sadece giriş yapan kullanıcının müşterilerinin cirolarını getir
 
       if (params) {
         const targetDate = new Date(params.date);

@@ -1,16 +1,16 @@
 import {
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    VStack,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  VStack,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { Customer, CustomerFormData } from '../../../types/customer';
@@ -103,7 +103,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 <Input
                   name="email"
                   type="email"
-                  value={formData.email}
+                  value={formData.email || ''}
                   onChange={handleChange}
                   placeholder="E-posta giriniz"
                 />

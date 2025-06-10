@@ -10,8 +10,7 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
-    Select,
-    VStack,
+    VStack
 } from '@chakra-ui/react';
 import React from 'react';
 import { Customer } from '../../../types/customer';
@@ -35,7 +34,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     full_name: '',
     phone: '',
     email: '',
-    status: 'active',
     ...initialData,
   });
 
@@ -45,14 +43,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         full_name: initialData.full_name,
         phone: initialData.phone,
         email: initialData.email,
-        status: initialData.status,
       });
     } else {
       setFormData({
         full_name: '',
         phone: '',
         email: '',
-        status: 'active',
       });
     }
   }, [initialData]);
@@ -107,23 +103,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 <Input
                   name="email"
                   type="email"
-                  value={formData.email}
+                  value={formData.email || ''}
                   onChange={handleChange}
                   placeholder="ornek@email.com"
                 />
               </FormControl>
 
-              <FormControl>
-                <FormLabel>Durum</FormLabel>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="active">Aktif</option>
-                  <option value="inactive">Pasif</option>
-                </Select>
-              </FormControl>
+
             </VStack>
           </ModalBody>
 

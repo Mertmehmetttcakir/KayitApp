@@ -10,6 +10,8 @@ export const useCustomers = (filters: CustomerFilters) => {
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers', filters],
     queryFn: () => CustomerService.getCustomers(),
+    staleTime: 0, // Cache'i hemen stale yap
+    refetchOnMount: true, // Mount olduğunda yeniden fetch et
   });
 
   const { mutate: createCustomer, isPending: isCreating } = useMutation({

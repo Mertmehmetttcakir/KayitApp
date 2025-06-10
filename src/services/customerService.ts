@@ -6,6 +6,7 @@ import { BaseApiService } from './baseApiService';
 const mapCustomerFromView = (customerData: any): Customer => {
   return {
     id: customerData.id,
+    user_id: customerData.user_id,
     full_name: customerData.full_name,
     email: customerData.email,
     phone: customerData.phone,
@@ -20,9 +21,17 @@ const mapCustomerFromView = (customerData: any): Customer => {
 
 export class CustomerService extends BaseApiService {
   static async getCustomers(): Promise<Customer[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const { data, error } = await supabase
       .from('customers_extended_details') // Use the new view
         .select('*')
+        .eq('user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerini getir
       .order('customer_created_at', { ascending: false }); // Order by aliased column
 
     if (error) {
@@ -33,10 +42,18 @@ export class CustomerService extends BaseApiService {
   }
 
   static async getCustomerById(id: string): Promise<Customer> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const { data, error } = await supabase
       .from('customers_extended_details') // Use the new view
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id) // Sadece giriş yapan kullanıcının müşterisini getir
       .single();
 
     if (error) {
@@ -44,24 +61,32 @@ export class CustomerService extends BaseApiService {
       throw new Error('Müşteri detayları getirilemedi');
     }
     if (!data) {
-        throw new Error('Müşteri bulunamadı');
+        throw new Error('Müşteri bulunamadı veya erişim yetkiniz yok');
     }
     return mapCustomerFromView(data);
   }
 
   static async createCustomer(customerData: CustomerCreate): Promise<Customer> {
-    // Oluşturma işlemi doğrudan 'customers' tablosuna yapılır.
-    // Sonrasında getCustomerById ile view'den çekilebilir, ama bu create içinde direkt view'den seçmek zor.
-    // En iyisi oluşturduktan sonra ID ile getCustomerById çağırmak veya temel customer verisini dönmek.
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
+    // Müşteri verisine user_id'yi ekle
+    const customerWithUserId = {
+      ...customerData,
+      user_id: user.id
+    };
+
     return this.handleCreateRequest<Customer>(
       async () => supabase
         .from('customers')
-        .insert([customerData])
+        .insert([customerWithUserId])
         .select() // Temel customer verisini seçer
         .single(),
       'Müşteri oluşturulamadı'
-      // Not: Oluşturma sonrası view'deki tüm alanlar hemen dolu olmayabilir (örn: last_appointment_date)
-      // Bunu frontend'de veya getCustomerById ile handle etmek gerekebilir.
     );
   }
 
@@ -69,32 +94,56 @@ export class CustomerService extends BaseApiService {
     id: string,
     customerData: CustomerUpdate
   ): Promise<Customer> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     // Güncelleme işlemi doğrudan 'customers' tablosuna yapılır.
     return this.handleUpdateRequest<Customer>(
       async () => supabase
         .from('customers')
         .update(customerData)
         .eq('id', id)
+        .eq('user_id', user.id) // Sadece giriş yapan kullanıcının müşterisini güncelle
         .select() // Temel customer verisini seçer
         .single(),
-      'Müşteri güncellenemedi'
+      'Müşteri güncellenemedi veya erişim yetkiniz yok'
     );
   }
 
   static async deleteCustomer(id: string): Promise<void> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     return this.handleDeleteRequest(
       async () => supabase
         .from('customers')
         .delete()
-        .eq('id', id),
-      'Müşteri silinemedi'
+        .eq('id', id)
+        .eq('user_id', user.id), // Sadece giriş yapan kullanıcının müşterisini sil
+      'Müşteri silinemedi veya erişim yetkiniz yok'
     );
   }
 
   static async searchCustomers(query: string): Promise<Customer[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const { data, error } = await supabase
       .from('customers_extended_details') // View üzerinden arama yapabiliriz
         .select('*')
+        .eq('user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerini ara
       .or(`full_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
       .order('customer_created_at', { ascending: false });
 
@@ -134,9 +183,17 @@ export class CustomerService extends BaseApiService {
   }
 
   static async getCustomersWithOutstandingDebt(): Promise<Customer[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     const { data, error } = await supabase
       .from('customers_extended_details')
       .select('*')
+      .eq('user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerini getir
       .gt('total_outstanding_balance_from_jobs', 0) // GÜNCELLENDİ
       .order('total_outstanding_balance_from_jobs', { ascending: false }); // GÜNCELLENDİ
 
