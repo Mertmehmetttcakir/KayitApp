@@ -10,6 +10,7 @@ import { CompanySettingsPage } from './pages/admin/CompanySettingsPage';
 import { SystemSettingsPage } from './pages/admin/SystemSettingsPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import AppointmentCalendar from './pages/appointments/AppointmentCalendar';
+import { AppointmentsListPage } from './pages/appointments/AppointmentsListPage';
 import { AuthCallback } from './pages/auth/AuthCallback';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -18,9 +19,12 @@ import { UpdatePasswordPage } from './pages/auth/UpdatePasswordPage';
 import { CustomerDetailsPage } from './pages/customers/CustomerDetailsPage';
 import CustomerList from './pages/customers/CustomerList';
 import { Dashboard } from './pages/Dashboard';
+import { JobDetailsPage } from './pages/jobs/JobDetailsPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { ReportsPage } from './pages/reports/ReportsPage';
+import ServiceHistory from './pages/services/ServiceHistory';
 import { theme } from './theme';
+import { debugTimezone } from './utils/dateUtils';
 
 // React Query client oluştur
 const queryClient = new QueryClient({
@@ -99,6 +103,13 @@ const RouteDebugger: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  // Timezone debug - geliştirme aşamasında
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      debugTimezone();
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <ChakraProvider theme={theme}>
@@ -124,11 +135,13 @@ export const App: React.FC = () => {
                     <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/customers" element={<CustomerList />} />
                     <Route path="/customers/:id" element={<CustomerDetailsPage />} />
-                      <Route path="/appointments" element={<AppointmentCalendar />} />
+                      <Route path="/appointments" element={<AppointmentsListPage />} />
+                      <Route path="/appointments/calendar" element={<AppointmentCalendar />} />
                       <Route path="/appointments/:id" element={<div>Randevu Detay</div>} />
+                      <Route path="/jobs/:id" element={<JobDetailsPage />} />
                       <Route path="/vehicles" element={<div>Araçlar</div>} />
                       <Route path="/technicians" element={<div>Teknisyenler</div>} />
-                      <Route path="/services" element={<div>Servis Geçmişi</div>} />
+                      <Route path="/services" element={<ServiceHistory />} />
                       <Route path="/reports" element={<ReportsPage />} />
                     </Route>
                   </Route>

@@ -8,30 +8,30 @@ import {
 } from '../types/reports';
 
 export class PDFExportService {
-  private static setupTurkishFont(doc: jsPDF) {
-    // Türkçe karakterler için Times font kullanıyoruz - bu font Türkçe karakterleri destekler
-    doc.setFont('times', 'normal');
+  private static setupFont(doc: jsPDF) {
+    // Using standard fonts for better compatibility
+    doc.setFont('helvetica', 'normal');
   }
 
   private static addHeader(doc: jsPDF, title: string) {
-    // Türkçe font desteği ekle
-    this.setupTurkishFont(doc);
+    // Font setup
+    this.setupFont(doc);
     
-    // Logo alanı (varsa)
+    // Logo area
     doc.setFontSize(20);
-    doc.setFont('times', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('ServiceTracker Plus', 20, 25);
     
-    // Başlık
+    // Title
     doc.setFontSize(16);
-    doc.setFont('times', 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text(title, 20, 40);
     
-    // Tarih
+    // Date
     doc.setFontSize(10);
-    doc.text(`Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, 50);
+    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 20, 50);
     
-    // Çizgi
+    // Line
     doc.setLineWidth(0.5);
     doc.line(20, 55, 190, 55);
     
@@ -42,14 +42,14 @@ export class PDFExportService {
     const pageHeight = doc.internal.pageSize.height;
     doc.setFontSize(8);
     doc.setTextColor(128);
-    doc.setFont('times', 'normal');
+    doc.setFont('helvetica', 'normal');
     
-    // Sayfa numarası için getCurrentPageInfo yerine alternatif
+    // Page number
     const currentPage = doc.internal.pages.length - 1;
-    doc.text(`Sayfa ${currentPage}`, 20, pageHeight - 20);
+    doc.text(`Page ${currentPage}`, 20, pageHeight - 20);
     
     doc.text(
-      'ServiceTracker Plus - Otomotiv Servis Yönetim Sistemi',
+      'ServiceTracker Plus - Automotive Service Management System',
       105,
       pageHeight - 20,
       { align: 'center' }
@@ -58,69 +58,69 @@ export class PDFExportService {
 
   static async exportFinancialReport(report: FinancialReport): Promise<void> {
     const doc = new jsPDF();
-    this.setupTurkishFont(doc);
-    let yPosition = this.addHeader(doc, 'Finansal Rapor');
+    this.setupFont(doc);
+    let yPosition = this.addHeader(doc, 'Financial Report');
 
-    // Özet bilgiler
+    // Summary information
     const summaryData = [
-      ['Toplam Gelir', `₺${report.totalRevenue.toLocaleString('tr-TR')}`],
-      ['Toplam Gider', `₺${report.totalExpenses.toLocaleString('tr-TR')}`],
-      ['Net Kâr', `₺${report.netProfit.toLocaleString('tr-TR')}`],
-      ['Bekleyen Ödemeler', `₺${report.pendingAmount.toLocaleString('tr-TR')}`],
-      ['Ödenmiş Tutar', `₺${report.paidAmount.toLocaleString('tr-TR')}`],
-      ['İade Tutarı', `₺${report.refundAmount.toLocaleString('tr-TR')}`],
-      ['Kâr Marjı', `%${report.profitMargin.toFixed(2)}`],
-      ['Gelir Artışı', `%${report.revenueGrowth.toFixed(2)}`],
+      ['Total Revenue', `$${report.totalRevenue.toLocaleString('en-US')}`],
+      ['Total Expenses', `$${report.totalExpenses.toLocaleString('en-US')}`],
+      ['Net Profit', `$${report.netProfit.toLocaleString('en-US')}`],
+      ['Pending Payments', `$${report.pendingAmount.toLocaleString('en-US')}`],
+      ['Paid Amount', `$${report.paidAmount.toLocaleString('en-US')}`],
+      ['Refund Amount', `$${report.refundAmount.toLocaleString('en-US')}`],
+      ['Profit Margin', `${report.profitMargin.toFixed(2)}%`],
+      ['Revenue Growth', `${report.revenueGrowth.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: summaryData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
     });
 
     this.addFooter(doc);
-    doc.save(`finansal-rapor-${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`financial-report-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
   static async exportCustomerReport(report: CustomerReport): Promise<void> {
     const doc = new jsPDF();
-    this.setupTurkishFont(doc);
-    let yPosition = this.addHeader(doc, 'Müşteri Raporu');
+    this.setupFont(doc);
+    let yPosition = this.addHeader(doc, 'Customer Report');
 
-    // Özet bilgiler
+    // Summary information
     const summaryData = [
-      ['Toplam Müşteri', report.totalCustomers.toString()],
-      ['Yeni Müşteri', report.newCustomers.toString()],
-      ['Geri Dönen Müşteri', report.returningCustomers.toString()],
-      ['Müşteri Tutma Oranı', `%${report.customerRetentionRate.toFixed(2)}`],
-      ['Ortalama Müşteri Değeri', `₺${report.averageCustomerValue.toLocaleString('tr-TR')}`],
-      ['Müşteri Artışı', `%${report.customerGrowth.toFixed(2)}`],
+      ['Total Customers', report.totalCustomers.toString()],
+      ['New Customers', report.newCustomers.toString()],
+      ['Returning Customers', report.returningCustomers.toString()],
+      ['Customer Retention Rate', `${report.customerRetentionRate.toFixed(2)}%`],
+      ['Average Customer Value', `$${report.averageCustomerValue.toLocaleString('en-US')}`],
+      ['Customer Growth', `${report.customerGrowth.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: summaryData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
@@ -128,31 +128,31 @@ export class PDFExportService {
 
     yPosition = (doc as any).lastAutoTable.finalY + 20;
 
-    // En iyi müşteriler
+    // Top customers
     if (report.topCustomers && report.topCustomers.length > 0) {
       doc.setFontSize(14);
-      doc.setFont('times', 'bold');
-      doc.text('En İyi Müşteriler', 20, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Top Customers', 20, yPosition);
       yPosition += 10;
 
       const topCustomersData = report.topCustomers.map(customer => [
         customer.name,
         customer.jobCount.toString(),
-        `₺${customer.totalSpent.toLocaleString('tr-TR')}`
+        `$${customer.totalSpent.toLocaleString('en-US')}`
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Müşteri Adı', 'İş Sayısı', 'Toplam Harcama']],
+        head: [['Customer Name', 'Job Count', 'Total Spent']],
         body: topCustomersData,
         styles: { 
           fontSize: 9,
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'normal'
         },
         headStyles: { 
           fillColor: [49, 130, 206],
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'bold'
         },
         margin: { left: 20, right: 20 },
@@ -160,37 +160,37 @@ export class PDFExportService {
     }
 
     this.addFooter(doc);
-    doc.save(`musteri-raporu-${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`customer-report-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
   static async exportServiceReport(report: ServiceReport): Promise<void> {
     const doc = new jsPDF();
-    this.setupTurkishFont(doc);
-    let yPosition = this.addHeader(doc, 'Servis Raporu');
+    this.setupFont(doc);
+    let yPosition = this.addHeader(doc, 'Service Report');
 
-    // Özet bilgiler
+    // Summary information
     const summaryData = [
-      ['Toplam İş', report.totalJobs.toString()],
-      ['Tamamlanan İş', report.completedJobs.toString()],
-      ['Bekleyen İş', report.pendingJobs.toString()],
-      ['İptal Edilen İş', report.cancelledJobs.toString()],
-      ['Ortalama İş Değeri', `₺${report.averageJobValue.toLocaleString('tr-TR')}`],
-      ['Ortalama Tamamlanma Süresi', `${report.averageCompletionTime.toFixed(1)} gün`],
-      ['İş Artışı', `%${report.jobGrowth.toFixed(2)}`],
+      ['Total Jobs', report.totalJobs.toString()],
+      ['Completed Jobs', report.completedJobs.toString()],
+      ['Pending Jobs', report.pendingJobs.toString()],
+      ['Cancelled Jobs', report.cancelledJobs.toString()],
+      ['Average Job Value', `$${report.averageJobValue.toLocaleString('en-US')}`],
+      ['Average Completion Time', `${report.averageCompletionTime.toFixed(1)} days`],
+      ['Job Growth', `${report.jobGrowth.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: summaryData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
@@ -198,31 +198,31 @@ export class PDFExportService {
 
     yPosition = (doc as any).lastAutoTable.finalY + 20;
 
-    // Popüler servisler
+    // Popular services
     if (report.popularServices && report.popularServices.length > 0) {
       doc.setFontSize(14);
-      doc.setFont('times', 'bold');
-      doc.text('Popüler Servisler', 20, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Popular Services', 20, yPosition);
       yPosition += 10;
 
       const servicesData = report.popularServices.map(service => [
         service.service,
         service.count.toString(),
-        `₺${service.revenue.toLocaleString('tr-TR')}`
+        `$${service.revenue.toLocaleString('en-US')}`
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Servis Adı', 'Adet', 'Toplam Gelir']],
+        head: [['Service Name', 'Count', 'Total Revenue']],
         body: servicesData,
         styles: { 
           fontSize: 9,
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'normal'
         },
         headStyles: { 
           fillColor: [49, 130, 206],
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'bold'
         },
         margin: { left: 20, right: 20 },
@@ -230,35 +230,35 @@ export class PDFExportService {
     }
 
     this.addFooter(doc);
-    doc.save(`servis-raporu-${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`service-report-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
   static async exportTechnicianReport(report: TechnicianReport): Promise<void> {
     const doc = new jsPDF();
-    this.setupTurkishFont(doc);
-    let yPosition = this.addHeader(doc, 'Teknisyen Raporu');
+    this.setupFont(doc);
+    let yPosition = this.addHeader(doc, 'Technician Report');
 
-    // Özet bilgiler
+    // Summary information
     const summaryData = [
-      ['Toplam Teknisyen', report.totalTechnicians.toString()],
-      ['Aktif Teknisyen', report.activeTechnicians.toString()],
-      ['Ortalama İş/Gün', report.productivity.averageJobsPerDay.toFixed(1)],
-      ['Ortalama Gelir/Teknisyen', `₺${report.productivity.averageRevenuePerTechnician.toLocaleString('tr-TR')}`],
-      ['Toplam Çalışma Saati', `${report.productivity.totalWorkHours.toFixed(1)} saat`],
+      ['Total Technicians', report.totalTechnicians.toString()],
+      ['Active Technicians', report.activeTechnicians.toString()],
+      ['Average Jobs/Day', report.productivity.averageJobsPerDay.toFixed(1)],
+      ['Average Revenue/Technician', `$${report.productivity.averageRevenuePerTechnician.toLocaleString('en-US')}`],
+      ['Total Work Hours', `${report.productivity.totalWorkHours.toFixed(1)} hours`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: summaryData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
@@ -266,33 +266,33 @@ export class PDFExportService {
 
     yPosition = (doc as any).lastAutoTable.finalY + 20;
 
-    // Teknisyen performansı
+    // Technician performance
     if (report.workload && report.workload.length > 0) {
       doc.setFontSize(14);
-      doc.setFont('times', 'bold');
-      doc.text('Teknisyen Performansı', 20, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Technician Performance', 20, yPosition);
       yPosition += 10;
 
       const performanceData = report.workload.map(tech => [
         tech.name,
         tech.completedJobs.toString(),
-        `₺${tech.totalRevenue.toLocaleString('tr-TR')}`,
+        `$${tech.totalRevenue.toLocaleString('en-US')}`,
         `${tech.averageRating.toFixed(1)}/5`,
-        `%${tech.efficiency.toFixed(1)}`
+        `${tech.efficiency.toFixed(1)}%`
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Teknisyen', 'İş Sayısı', 'Toplam Gelir', 'Ortalama Puan', 'Verimlilik']],
+        head: [['Technician', 'Job Count', 'Total Revenue', 'Average Rating', 'Efficiency']],
         body: performanceData,
         styles: { 
           fontSize: 9,
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'normal'
         },
         headStyles: { 
           fillColor: [49, 130, 206],
-          font: 'times',
+          font: 'helvetica',
           fontStyle: 'bold'
         },
         margin: { left: 20, right: 20 },
@@ -300,7 +300,7 @@ export class PDFExportService {
     }
 
     this.addFooter(doc);
-    doc.save(`teknisyen-raporu-${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`technician-report-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
   static async exportCombinedReport(
@@ -310,34 +310,34 @@ export class PDFExportService {
     technician: TechnicianReport
   ): Promise<void> {
     const doc = new jsPDF();
-    this.setupTurkishFont(doc);
-    let yPosition = this.addHeader(doc, 'Kapsamlı İşletme Raporu');
+    this.setupFont(doc);
+    let yPosition = this.addHeader(doc, 'Comprehensive Business Report');
 
-    // Finansal özet
+    // Financial summary
     doc.setFontSize(14);
-    doc.setFont('times', 'bold');
-    doc.text('Finansal Özet', 20, yPosition);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Financial Summary', 20, yPosition);
     yPosition += 10;
 
     const financialData = [
-      ['Net Kâr', `₺${financial.netProfit.toLocaleString('tr-TR')}`],
-      ['Toplam Gelir', `₺${financial.totalRevenue.toLocaleString('tr-TR')}`],
-      ['Bekleyen Ödemeler', `₺${financial.pendingAmount.toLocaleString('tr-TR')}`],
-      ['Kâr Marjı', `%${financial.profitMargin.toFixed(2)}`],
+      ['Net Profit', `$${financial.netProfit.toLocaleString('en-US')}`],
+      ['Total Revenue', `$${financial.totalRevenue.toLocaleString('en-US')}`],
+      ['Pending Payments', `$${financial.pendingAmount.toLocaleString('en-US')}`],
+      ['Profit Margin', `${financial.profitMargin.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: financialData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
@@ -345,30 +345,30 @@ export class PDFExportService {
 
     yPosition = (doc as any).lastAutoTable.finalY + 15;
 
-    // Müşteri özeti
+    // Customer summary
     doc.setFontSize(14);
-    doc.setFont('times', 'bold');
-    doc.text('Müşteri Özeti', 20, yPosition);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Customer Summary', 20, yPosition);
     yPosition += 10;
 
     const customerData = [
-      ['Toplam Müşteri', customer.totalCustomers.toString()],
-      ['Yeni Müşteri', customer.newCustomers.toString()],
-      ['Müşteri Tutma Oranı', `%${customer.customerRetentionRate.toFixed(2)}`],
+      ['Total Customers', customer.totalCustomers.toString()],
+      ['New Customers', customer.newCustomers.toString()],
+      ['Customer Retention Rate', `${customer.customerRetentionRate.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: customerData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
@@ -376,36 +376,36 @@ export class PDFExportService {
 
     yPosition = (doc as any).lastAutoTable.finalY + 15;
 
-    // Servis özeti
+    // Service summary
     doc.setFontSize(14);
-    doc.setFont('times', 'bold');
-    doc.text('Servis Özeti', 20, yPosition);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Service Summary', 20, yPosition);
     yPosition += 10;
 
     const serviceData = [
-      ['Toplam İş', service.totalJobs.toString()],
-      ['Tamamlanan İş', service.completedJobs.toString()],
-      ['İş Artışı', `%${service.jobGrowth.toFixed(2)}`],
+      ['Total Jobs', service.totalJobs.toString()],
+      ['Completed Jobs', service.completedJobs.toString()],
+      ['Job Growth', `${service.jobGrowth.toFixed(2)}%`],
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metrik', 'Değer']],
+      head: [['Metric', 'Value']],
       body: serviceData,
       styles: { 
         fontSize: 10,
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'normal'
       },
       headStyles: { 
         fillColor: [49, 130, 206],
-        font: 'times',
+        font: 'helvetica',
         fontStyle: 'bold'
       },
       margin: { left: 20, right: 20 },
     });
 
     this.addFooter(doc);
-    doc.save(`kapsamli-rapor-${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`comprehensive-report-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 } 

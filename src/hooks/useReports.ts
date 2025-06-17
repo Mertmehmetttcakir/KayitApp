@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { ReportsService } from '../services/reportsService';
 import {
-    CustomerReport,
-    FinancialReport,
-    ReportExportOptions,
-    ReportFilters,
-    RevenueChartData,
-    ServiceReport,
-    TechnicianReport
+  CustomerReport,
+  FinancialReport,
+  ReportExportOptions,
+  ReportFilters,
+  RevenueChartData,
+  ServiceReport,
+  TechnicianReport
 } from '../types/reports';
 
 const REPORTS_QUERY_KEY_PREFIX = 'reports';

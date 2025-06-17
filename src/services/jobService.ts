@@ -20,13 +20,29 @@ export class JobService extends BaseApiService {
     );
   }
 
-  static async getJobById(id: string): Promise<JobSummary> { // JobSummary dönebiliriz
+  static async getJobById(id: string): Promise<JobSummary> {
     return this.handleRequest<JobSummary>(
       async () =>
         supabase
-          .from('jobs_with_balance') // Detayları view'dan çekelim ki bakiye bilgileri de gelsin
-          .select('id:job_id, customer_id, vehicle_id, job_description, job_date, total_cost, status:job_status, notes:job_notes, created_at:job_created_at, updated_at:job_updated_at, total_paid_for_job, total_refunded_for_job, remaining_balance_for_job')
-          .eq('job_id', id) // View'daki sütun adı job_id olduğu için burada eq buna göre olmalı
+          .from('jobs_with_balance')
+          .select(`
+            id:job_id, 
+            customer_id, 
+            vehicle_id, 
+            job_description, 
+            job_date, 
+            total_cost, 
+            status:job_status, 
+            notes:job_notes, 
+            created_at:job_created_at, 
+            updated_at:job_updated_at, 
+            total_paid_for_job, 
+            total_refunded_for_job, 
+            remaining_balance_for_job,
+            customer:customers!customer_id (id, full_name, phone, email),
+            vehicle:vehicles!vehicle_id (id, plate, brand, model, year)
+          `)
+          .eq('job_id', id)
           .single(),
       'İş detayları getirilemedi'
     );

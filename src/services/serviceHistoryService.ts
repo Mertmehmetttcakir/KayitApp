@@ -4,29 +4,45 @@ import { BaseApiService } from './baseApiService';
 
 export class ServiceHistoryService extends BaseApiService {
   static async getServiceHistories(): Promise<ServiceHistory[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     return this.handleListRequest<ServiceHistory>(
       async () => supabase
         .from('service_history')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, full_name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin servis geçmişi
         .order('service_date', { ascending: false }),
       'Servis geçmişi getirilemedi'
     );
   }
 
   static async getServiceHistoryById(id: string): Promise<ServiceHistory> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     return this.handleRequest<ServiceHistory>(
       async () => supabase
         .from('service_history')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, full_name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
         .eq('id', id)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin servis kaydı
         .single(),
       'Servis detayları getirilemedi'
     );
@@ -39,7 +55,7 @@ export class ServiceHistoryService extends BaseApiService {
         .insert([data])
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers (id, full_name, phone),
           vehicle:vehicles (id, plate, brand, model)
         `)
         .single(),
@@ -58,7 +74,7 @@ export class ServiceHistoryService extends BaseApiService {
         .eq('id', id)
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers (id, full_name, phone),
           vehicle:vehicles (id, plate, brand, model)
         `)
         .single(),
@@ -82,7 +98,7 @@ export class ServiceHistoryService extends BaseApiService {
         .from('service_history')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers (id, full_name, phone),
           vehicle:vehicles (id, plate, brand, model)
         `)
         .eq('customer_id', customerId)
@@ -97,7 +113,7 @@ export class ServiceHistoryService extends BaseApiService {
         .from('service_history')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers (id, full_name, phone),
           vehicle:vehicles (id, plate, brand, model)
         `)
         .eq('vehicle_id', vehicleId)
@@ -107,14 +123,22 @@ export class ServiceHistoryService extends BaseApiService {
   }
 
   static async getRecentServiceHistory(limit: number = 10): Promise<ServiceHistory[]> {
+    // Mevcut kullanıcının ID'sini al
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Kullanıcı kimlik doğrulaması gerekli');
+    }
+
     return this.handleListRequest<ServiceHistory>(
       async () => supabase
         .from('service_history')
         .select(`
           *,
-          customer:customers (id, name, phone),
+          customer:customers!inner (id, full_name, phone, user_id),
           vehicle:vehicles (id, plate, brand, model)
         `)
+        .eq('customer.user_id', user.id) // Sadece giriş yapan kullanıcının müşterilerinin servis geçmişi
         .order('service_date', { ascending: false })
         .limit(limit),
       'Son servis kayıtları getirilemedi'
@@ -126,7 +150,7 @@ export class ServiceHistoryService extends BaseApiService {
       .from('service_history')
       .select(`
         *,
-        customer:customers (id, name, phone),
+        customer:customers (id, full_name, phone),
         vehicle:vehicles (id, plate, brand, model)
       `)
       .eq('id', serviceId)
@@ -145,7 +169,7 @@ export class ServiceHistoryService extends BaseApiService {
       .from('service_history')
       .select(`
         *,
-        customer:customers (id, name, phone),
+        customer:customers (id, full_name, phone),
         vehicle:vehicles (id, plate, brand, model)
       `)
       .eq('id', serviceId)

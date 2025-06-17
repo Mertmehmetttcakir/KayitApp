@@ -9,13 +9,21 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['appointments', filters],
-    queryFn: () => AppointmentService.getAppointments(),
+    queryFn: () => {
+      if (filters?.status || filters?.customerId) {
+        return AppointmentService.getFilteredAppointments(filters);
+      }
+      return AppointmentService.getRecentAppointments(50); // Sadece son 50 randevuyu getir
+    },
+    staleTime: 5 * 60 * 1000, // 5 dakika
+    gcTime: 30 * 60 * 1000, // 30 dakika
   });
 
   const { mutate: createAppointment, isPending: isCreating } = useMutation({
-    mutationFn: (data: AppointmentCreate) => AppointmentService.createAppointment(data),
+    mutationFn: (data: AppointmentCreate) => AppointmentService.createAppointmentWithConflictCheck(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['available-time-slots'] });
       toast({
         title: 'Randevu oluşturuldu',
         status: 'success',
@@ -36,6 +44,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     mutationFn: (data: AppointmentCreate) => AppointmentService.createRecurringAppointments(data),
     onSuccess: (data: Appointment[]) => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['available-time-slots'] });
       toast({
         title: `${data.length} tekrarlayan randevu oluşturuldu`,
         status: 'success',
@@ -54,9 +63,10 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 
   const { mutate: updateAppointment, isPending: isUpdating } = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<AppointmentCreate> }) =>
-      AppointmentService.updateAppointment(id, data),
+      AppointmentService.updateAppointmentWithConflictCheck(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['available-time-slots'] });
       toast({
         title: 'Randevu güncellendi',
         status: 'success',
@@ -77,6 +87,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     mutationFn: (id: string) => AppointmentService.deleteAppointment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['available-time-slots'] });
       toast({
         title: 'Randevu silindi',
         status: 'success',
@@ -104,5 +115,54 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     isCreatingRecurring,
     isUpdating,
     isDeleting,
+  };
+};
+
+/**
+ * Randevu çakışması kontrolü için hook
+ */
+export const useAppointmentConflictCheck = () => {
+  const { mutate: checkConflict, isPending: isChecking, data: conflictResult } = useMutation({
+    mutationFn: ({
+      appointmentDate,
+      startTime,
+      endTime,
+      excludeAppointmentId
+    }: {
+      appointmentDate: string;
+      startTime: string;
+      endTime: string;
+      excludeAppointmentId?: string;
+    }) => AppointmentService.checkAppointmentConflict(appointmentDate, startTime, endTime, excludeAppointmentId),
+    onError: (error) => {
+      console.error('Çakışma kontrolü hatası:', error);
+    },
+  });
+
+  return {
+    checkConflict,
+    isChecking,
+    conflictResult,
+  };
+};
+
+/**
+ * Uygun saat dilimlerini getirmek için hook
+ */
+export const useAvailableTimeSlots = (appointmentDate: string, duration: number = 60) => {
+  const { data: timeSlots, isLoading: isLoadingSlots, error } = useQuery({
+    queryKey: ['available-time-slots', appointmentDate, duration],
+    queryFn: () => AppointmentService.getAvailableTimeSlots(appointmentDate, duration),
+    enabled: !!appointmentDate,
+    staleTime: 2 * 60 * 1000, // 2 dakika
+    gcTime: 10 * 60 * 1000, // 10 dakika
+  });
+
+  return {
+    timeSlots,
+    isLoadingSlots,
+    error,
+    availableSlots: timeSlots?.availableSlots || [],
+    busySlots: timeSlots?.busySlots || [],
   };
 }; 

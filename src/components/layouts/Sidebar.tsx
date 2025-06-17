@@ -1,20 +1,21 @@
 import {
-    Box,
-    Divider,
-    Icon,
-    Link,
-    Text,
-    useColorModeValue,
-    VStack
+  Box,
+  Divider,
+  Icon,
+  Link,
+  Text,
+  useColorModeValue,
+  VStack
 } from '@chakra-ui/react';
 import React from 'react';
 import {
-    FiBarChart2,
-    FiClipboard,
-    FiHome,
-    FiSettings,
-    FiTool,
-    FiUsers
+  FiBarChart2,
+  FiCalendar,
+  FiClipboard,
+  FiHome,
+  FiSettings,
+  FiTool,
+  FiUsers
 } from 'react-icons/fi';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useUserRole } from '../../hooks/useUserRole';
@@ -91,6 +92,10 @@ export const Sidebar: React.FC = () => {
           Müşteriler
         </NavItem>
         )}
+        
+        <NavItem icon={FiCalendar} to="/appointments">
+          Randevular
+        </NavItem>
         
         <NavItem icon={FiTool} to="/technicians">
           Teknisyenler

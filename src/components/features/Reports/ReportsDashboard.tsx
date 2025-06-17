@@ -97,19 +97,19 @@ export const ReportsDashboard: React.FC = () => {
       switch (reportType) {
         case 'financial':
           data = financialData;
-          filename = 'finansal-rapor.csv';
+          filename = 'financial-report.csv';
           break;
         case 'customer':
           data = customerData;
-          filename = 'musteri-raporu.csv';
+          filename = 'customer-report.csv';
           break;
         case 'service':
           data = serviceData;
-          filename = 'servis-raporu.csv';
+          filename = 'service-report.csv';
           break;
         case 'technician':
           data = technicianData;
-          filename = 'teknisyen-raporu.csv';
+          filename = 'technician-report.csv';
           break;
         default:
           return;
@@ -119,8 +119,8 @@ export const ReportsDashboard: React.FC = () => {
         const csvContent = convertToCSV(data);
         downloadCSV(csvContent, filename);
         toast({
-          title: 'Başarılı',
-          description: 'CSV dosyası indirildi',
+          title: 'Success',
+          description: 'CSV file downloaded',
           status: 'success',
           duration: 3000,
         });

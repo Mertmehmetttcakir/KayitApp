@@ -121,4 +121,19 @@ export const useDeleteVehicle = (
     },
     ...options,
   });
+};
+
+export const useVehicles = () => {
+  const { data: vehicles, isLoading, error } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: () => VehicleService.getAllVehicles(),
+    staleTime: 5 * 60 * 1000, // 5 dakika
+    gcTime: 30 * 60 * 1000, // 30 dakika
+  });
+
+  return {
+    vehicles,
+    isLoading,
+    error,
+  };
 }; 
