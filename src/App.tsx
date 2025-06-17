@@ -8,7 +8,7 @@ import { MainLayout } from './components/layouts/MainLayout';
 import { AuthProvider } from './context/AuthContext';
 import { CompanySettingsPage } from './pages/admin/CompanySettingsPage';
 import { SystemSettingsPage } from './pages/admin/SystemSettingsPage';
-import { UserManagementPage } from './pages/admin/UserManagementPage';
+
 import AppointmentCalendar from './pages/appointments/AppointmentCalendar';
 import { AppointmentsListPage } from './pages/appointments/AppointmentsListPage';
 import { AuthCallback } from './pages/auth/AuthCallback';
@@ -149,7 +149,7 @@ export const App: React.FC = () => {
                   {/* Admin only routes */}
                   <Route element={<ProtectedRoute requiredPermission="manage_users" />}>
                     <Route element={<MainLayout />}>
-                      <Route path="/admin/users" element={<UserManagementPage />} />
+        
                       <Route path="/admin/company" element={<CompanySettingsPage />} />
                       <Route path="/admin/settings" element={<SystemSettingsPage />} />
                     </Route>

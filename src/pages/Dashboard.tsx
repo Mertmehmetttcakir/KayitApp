@@ -70,7 +70,10 @@ export const Dashboard: React.FC = () => {
   
   const { appointments: todayAppointments, isLoading: isLoadingAppointments } = useAppointments(todayAppointmentFilters);
   const { appointments: allAppointments } = useAppointments();
-  const { customers, isLoading: isLoadingCustomers } = useCustomers();
+  const { customers, isLoading: isLoadingCustomers } = useCustomers({
+    sortBy: 'full_name',
+    sortOrder: 'asc'
+  });
   const { vehicles, isLoading: isLoadingVehicles } = useVehicles();
   
   // Bu ay için finansal rapor

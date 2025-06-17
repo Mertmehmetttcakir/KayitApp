@@ -1,44 +1,44 @@
-import { CalendarIcon, DownloadIcon, SearchIcon } from '@chakra-ui/icons';
+import { AddIcon, CalendarIcon, DownloadIcon, SearchIcon } from '@chakra-ui/icons';
 import {
-    Alert,
-    AlertIcon,
-    Badge,
-    Box,
-    Button,
-    Card,
-    CardBody,
-    CardHeader,
-    Flex,
-    FormControl,
-    FormLabel,
-    Grid,
-    GridItem,
-    Heading,
-    HStack,
-    IconButton,
-    Input,
-    InputGroup,
-    InputLeftElement,
-    Link,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
-    Select,
-    SimpleGrid,
-    Spinner,
-    Stat,
-    StatLabel,
-    StatNumber,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    useToast,
-    VStack,
+  Alert,
+  AlertIcon,
+  Badge,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Flex,
+  FormControl,
+  FormLabel,
+  Grid,
+  GridItem,
+  Heading,
+  HStack,
+  IconButton,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Link,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Select,
+  SimpleGrid,
+  Spinner,
+  Stat,
+  StatLabel,
+  StatNumber,
+  Table,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
 import React, { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -49,8 +49,8 @@ import { Appointment } from '../../types/appointment';
 import { formatDateDisplaySafe } from '../../utils/dateUtils';
 import { formatCurrency } from '../../utils/formatters';
 
-// Birleşik servis kayıt tipi (şimdilik sadece randevular)
-interface CombinedServiceRecord {
+// Servis kayıt tipi (appointment tablosundan)
+interface ServiceRecord {
   id: string;
   customer_id: string;
   vehicle_id: string;
@@ -63,8 +63,7 @@ interface CombinedServiceRecord {
   created_at: string;
   customer?: any;
   vehicle?: any;
-  type: 'appointment'; // Şimdilik sadece randevu
-  original?: Appointment;
+  original: Appointment;
 }
 
 const ServiceHistory: React.FC = () => {
@@ -78,36 +77,33 @@ const ServiceHistory: React.FC = () => {
     end: '',
   });
 
-  // Data hooks - şimdilik sadece randevular
+  // Data hooks
   const { appointments, isLoading: isLoadingAppointments } = useAppointments();
-  const { customers } = useCustomers();
+  const { customers } = useCustomers({
+    sortBy: 'full_name',
+    sortOrder: 'asc'
+  });
   const { vehicles } = useVehicles();
 
-  // Randevuları service record formatına dönüştür
-  const combinedRecords = useMemo((): CombinedServiceRecord[] => {
-    const records: CombinedServiceRecord[] = [];
+  // Randevuları servis kayıtları formatına dönüştür
+  const serviceRecords = useMemo((): ServiceRecord[] => {
+    if (!appointments) return [];
 
-    // Sadece randevuları ekle
-    if (appointments) {
-      appointments.forEach(appointment => {
-        records.push({
-          id: appointment.id,
-          customer_id: appointment.customer_id,
-          vehicle_id: appointment.vehicle_id,
-          service_date: appointment.appointment_date,
-          service_type: appointment.service_type,
-          description: appointment.notes || '',
-          cost: appointment.total_cost || 0,
-          status: appointment.status,
-          notes: appointment.notes,
-          created_at: appointment.created_at,
-          customer: appointment.customer,
-          vehicle: appointment.vehicle,
-          type: 'appointment',
-          original: appointment
-        });
-      });
-    }
+    const records: ServiceRecord[] = appointments.map(appointment => ({
+      id: appointment.id,
+      customer_id: appointment.customer_id,
+      vehicle_id: appointment.vehicle_id,
+      service_date: appointment.appointment_date,
+      service_type: appointment.service_type,
+      description: appointment.notes || '',
+      cost: appointment.total_cost || 0,
+      status: appointment.status,
+      notes: appointment.notes,
+      created_at: appointment.created_at,
+      customer: appointment.customer,
+      vehicle: appointment.vehicle,
+      original: appointment
+    }));
 
     // Tarihe göre sırala (en yeni önce)
     return records.sort((a, b) => 
@@ -117,7 +113,7 @@ const ServiceHistory: React.FC = () => {
 
   // Filtrelenmiş kayıtlar
   const filteredRecords = useMemo(() => {
-    return combinedRecords.filter((record) => {
+    return serviceRecords.filter((record) => {
       // Arama terimi filtresi
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -162,35 +158,43 @@ const ServiceHistory: React.FC = () => {
 
       return true;
     });
-  }, [combinedRecords, searchTerm, selectedCustomer, selectedVehicle, statusFilter, dateRange]);
+  }, [serviceRecords, searchTerm, selectedCustomer, selectedVehicle, statusFilter, dateRange]);
 
   // İstatistikler
   const stats = useMemo(() => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
-    const completed = combinedRecords.filter(r => 
+    const pending = serviceRecords.filter(r => 
+      r.status === 'pending' || r.status === 'Beklemede'
+    ).length;
+    const inProgress = serviceRecords.filter(r => 
+      r.status === 'in-progress' || r.status === 'İşlemde'
+    ).length;
+    const completed = serviceRecords.filter(r => 
       r.status === 'completed' || r.status === 'Tamamlandı'
     ).length;
-    const totalRevenue = combinedRecords
+    const totalRevenue = serviceRecords
       .filter(r => r.status === 'completed' || r.status === 'Tamamlandı')
       .reduce((sum, r) => sum + (r.cost || 0), 0);
-    const thisMonth = combinedRecords.filter(r => {
+    const thisMonth = serviceRecords.filter(r => {
       const serviceDate = new Date(r.service_date);
       return serviceDate.getMonth() === currentMonth && serviceDate.getFullYear() === currentYear;
     }).length;
 
     return {
-      total: combinedRecords.length,
+      total: serviceRecords.length,
+      pending,
+      inProgress,
       completed,
       totalRevenue,
       thisMonth,
     };
-  }, [combinedRecords]);
+  }, [serviceRecords]);
 
   // Durum badge'i
   const getStatusBadge = (status: string) => {
-    const appointmentStatusMap: Record<string, { color: string; text: string }> = {
+    const statusMap: Record<string, { color: string; text: string }> = {
       'pending': { color: 'yellow', text: 'Beklemede' },
       'Beklemede': { color: 'yellow', text: 'Beklemede' },
       'confirmed': { color: 'blue', text: 'Onaylandı' },
@@ -201,7 +205,7 @@ const ServiceHistory: React.FC = () => {
       'cancelled': { color: 'red', text: 'İptal Edildi' },
       'İptal Edildi': { color: 'red', text: 'İptal Edildi' },
     };
-    const statusInfo = appointmentStatusMap[status] || { color: 'gray', text: status };
+    const statusInfo = statusMap[status] || { color: 'gray', text: status };
     return <Badge colorScheme={statusInfo.color}>{statusInfo.text}</Badge>;
   };
 
@@ -227,8 +231,8 @@ const ServiceHistory: React.FC = () => {
     setDateRange({ start: '', end: '' });
   };
 
-  // PDF export işlemi (geçici olarak sadece bilgi mesajı)
-  const handleExportPDF = async (record: CombinedServiceRecord) => {
+  // PDF export işlemi
+  const handleExportPDF = async (record: ServiceRecord) => {
     toast({
       title: 'Bilgi',
       description: 'PDF raporu özelliği yakında eklenecek',
@@ -243,20 +247,23 @@ const ServiceHistory: React.FC = () => {
     <Box p={5}>
       <Flex mb={6} justifyContent="space-between" alignItems="center">
         <VStack align="start" spacing={1}>
-          <Heading size="lg">Servis Geçmişi & Randevular</Heading>
+          <Heading size="lg">Servis Geçmişi</Heading>
           <Text fontSize="sm" color="gray.600">
-            Şu anda sadece randevular gösteriliyor. Servis kayıtları yakında eklenecek.
+            Tüm servis kayıtları ve randevular
           </Text>
         </VStack>
         <HStack spacing={3}>
           <Button leftIcon={<CalendarIcon />} colorScheme="blue" as={RouterLink} to="/appointments">
             Yeni Randevu
           </Button>
+          <Button leftIcon={<AddIcon />} colorScheme="green" as={RouterLink} to="/appointments">
+            Yeni Servis Kaydı
+          </Button>
         </HStack>
       </Flex>
 
       {/* İstatistikler */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={5} mb={6}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 6 }} spacing={5} mb={6}>
         <Stat
           px={4}
           py={3}
@@ -266,8 +273,34 @@ const ServiceHistory: React.FC = () => {
           borderLeft="4px solid"
           borderColor="blue.400"
         >
-          <StatLabel>Toplam Randevu</StatLabel>
+          <StatLabel>Toplam</StatLabel>
           <StatNumber>{stats.total}</StatNumber>
+        </Stat>
+
+        <Stat
+          px={4}
+          py={3}
+          bg="white"
+          shadow="sm"
+          rounded="lg"
+          borderLeft="4px solid"
+          borderColor="yellow.400"
+        >
+          <StatLabel>Beklemede</StatLabel>
+          <StatNumber>{stats.pending}</StatNumber>
+        </Stat>
+
+        <Stat
+          px={4}
+          py={3}
+          bg="white"
+          shadow="sm"
+          rounded="lg"
+          borderLeft="4px solid"
+          borderColor="orange.400"
+        >
+          <StatLabel>İşlemde</StatLabel>
+          <StatNumber>{stats.inProgress}</StatNumber>
         </Stat>
 
         <Stat
@@ -303,7 +336,7 @@ const ServiceHistory: React.FC = () => {
           shadow="sm"
           rounded="lg"
           borderLeft="4px solid"
-          borderColor="orange.400"
+          borderColor="purple.400"
         >
           <StatLabel>Toplam Gelir</StatLabel>
           <StatNumber>{formatCurrency(stats.totalRevenue)}</StatNumber>
@@ -413,10 +446,10 @@ const ServiceHistory: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Kayıt Listesi */}
+      {/* Servis Kayıtları Listesi */}
       <Card>
         <CardHeader>
-          <Heading size="md">Randevu Listesi</Heading>
+          <Heading size="md">Tüm Kayıtlar</Heading>
         </CardHeader>
         <CardBody>
           {isLoading ? (
@@ -433,6 +466,7 @@ const ServiceHistory: React.FC = () => {
                     <Th>Araç</Th>
                     <Th>Servis Tipi</Th>
                     <Th>Durum</Th>
+                    <Th>Notlar</Th>
                     <Th isNumeric>Tutar</Th>
                     <Th>İşlemler</Th>
                   </Tr>
@@ -462,6 +496,11 @@ const ServiceHistory: React.FC = () => {
                       </Td>
                       <Td>{getServiceTypeText(record.service_type)}</Td>
                       <Td>{getStatusBadge(record.status)}</Td>
+                      <Td>
+                        <Text fontSize="sm" noOfLines={2} maxW="200px">
+                          {record.description || record.notes || '-'}
+                        </Text>
+                      </Td>
                       <Td isNumeric>{formatCurrency(record.cost || 0)}</Td>
                       <Td>
                         <HStack spacing={2}>
@@ -496,7 +535,7 @@ const ServiceHistory: React.FC = () => {
           ) : (
             <Alert status="info">
               <AlertIcon />
-              Seçili kriterlere uygun randevu bulunamadı.
+              Seçili kriterlere uygun kayıt bulunamadı.
             </Alert>
           )}
         </CardBody>
